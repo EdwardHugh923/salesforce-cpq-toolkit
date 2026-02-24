@@ -1,0 +1,69 @@
+{
+  "manifest_version": 3,
+  "name": "Salesforce CPQ Toolkit",
+  "version": "1.0.0",
+  "description": "A professional toolkit for Salesforce CPQ — explore twin fields, simulate quotes, and understand your CPQ implementation without touching production data.",
+  "icons": {
+    "16": "assets/icon16.png",
+    "48": "assets/icon48.png",
+    "128": "assets/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "assets/icon16.png",
+      "48": "assets/icon48.png",
+      "128": "assets/icon128.png"
+    }
+  },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs",
+    "scripting",
+    "cookies"
+  ],
+  "host_permissions": [
+    "https://*.salesforce.com/*",
+    "https://*.force.com/*",
+    "https://*.my.salesforce.com/*",
+    "https://*.lightning.force.com/*",
+    "https://*.develop.lightning.force.com/*",
+    "https://*.develop.my.salesforce.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.salesforce.com/*",
+        "https://*.force.com/*",
+        "https://*.my.salesforce.com/*",
+        "https://*.lightning.force.com/*",
+        "https://*.develop.lightning.force.com/*",
+        "https://*.develop.my.salesforce.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "tools/*.html",
+        "tools/*.js",
+        "styles/*.css",
+        "assets/*"
+      ],
+      "matches": [
+        "https://*.salesforce.com/*",
+        "https://*.force.com/*",
+        "https://*.my.salesforce.com/*",
+        "https://*.lightning.force.com/*",
+        "https://*.develop.lightning.force.com/*",
+        "https://*.develop.my.salesforce.com/*"
+      ]
+    }
+  ]
+}

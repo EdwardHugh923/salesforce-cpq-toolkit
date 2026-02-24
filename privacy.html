@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — Salesforce CPQ Toolkit</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Funnel+Sans:wght@300..800&display=swap');
+    :root {
+      --color-crimson: #c92228; --color-crimson-dark: #a01a1f; --color-crimson-light: #e8454a;
+      --color-gold: #E09F3E; --color-gold-dark: #c4882a; --color-gold-light: #f0c06a;
+      --color-white: #ffffff; --color-bg: #0f1117; --color-surface: #181c26;
+      --color-surface-2: #1e2334; --color-surface-3: #252a3d;
+      --color-border: rgba(255,255,255,0.08); --color-border-active: rgba(201,34,40,0.5);
+      --color-text: #e8eaf0; --color-text-muted: #7d8494; --color-text-subtle: #4a5066;
+      --color-success: #2ecc71; --color-warning: #E09F3E; --color-error: #c92228;
+      --font-family: 'Funnel Sans', system-ui, sans-serif;
+      --radius-sm: 4px; --radius: 8px; --radius-lg: 12px; --radius-xl: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.4); --shadow: 0 4px 16px rgba(0,0,0,0.5);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.7); --shadow-crimson: 0 4px 24px rgba(201,34,40,0.3);
+      --transition: 150ms ease;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { font-family: var(--font-family); background: var(--color-bg); color: var(--color-text); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: var(--color-surface); } ::-webkit-scrollbar-thumb { background: var(--color-surface-3); border-radius: 3px; }
+    h1,h2,h3,h4 { font-family: var(--font-family); font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+    a { color: var(--color-gold); text-decoration: none; } a:hover { color: var(--color-gold-light); }
+    code, pre { font-family: 'Courier New', monospace; font-size: 12px; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius); border: none; font-family: var(--font-family); font-size: 13px; font-weight: 600; cursor: pointer; transition: all var(--transition); white-space: nowrap; }
+    .btn-primary { background: var(--color-crimson); color: var(--color-white); } .btn-primary:hover { background: var(--color-crimson-light); }
+    .btn-secondary { background: var(--color-surface-3); color: var(--color-text); border: 1px solid var(--color-border); } .btn-secondary:hover { background: var(--color-surface-2); border-color: var(--color-border-active); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; } .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .input, .select { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); color: var(--color-text); font-family: var(--font-family); font-size: 13px; padding: 8px 12px; width: 100%; transition: border-color var(--transition); outline: none; }
+    .input:focus, .select:focus { border-color: var(--color-crimson); box-shadow: 0 0 0 2px rgba(201,34,40,0.15); } .input::placeholder { color: var(--color-text-subtle); }
+    .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 100px; font-size: 11px; font-weight: 600; letter-spacing: 0.03em; }
+    .badge-crimson { background: rgba(201,34,40,0.2); color: var(--color-crimson-light); } .badge-gold { background: rgba(224,159,62,0.2); color: var(--color-gold-light); } .badge-success { background: rgba(46,204,113,0.15); color: #4ddd8a; } .badge-muted { background: var(--color-surface-2); color: var(--color-text-muted); }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; } .status-dot.active { background: var(--color-success); box-shadow: 0 0 6px rgba(46,204,113,0.6); }
+    .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--color-border); }
+    table { width: 100%; border-collapse: collapse; } thead { background: var(--color-surface-2); position: sticky; top: 0; z-index: 1; }
+    th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-muted); border-bottom: 1px solid var(--color-border); white-space: nowrap; cursor: pointer; user-select: none; }
+    th:hover { color: var(--color-text); } th.sorted { color: var(--color-gold); }
+    td { padding: 9px 14px; font-size: 13px; border-bottom: 1px solid var(--color-border); vertical-align: middle; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    tr:last-child td { border-bottom: none; } tr:hover td { background: rgba(255,255,255,0.03); }
+    .loader { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 48px; color: var(--color-text-muted); }
+    .spinner { width: 36px; height: 36px; border: 3px solid var(--color-border); border-top-color: var(--color-crimson); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 64px 32px; text-align: center; gap: 12px; color: var(--color-text-muted); }
+    .empty-icon { font-size: 48px; opacity: 0.4; margin-bottom: 8px; }
+    .error-banner { background: rgba(201,34,40,0.12); border: 1px solid rgba(201,34,40,0.3); border-radius: var(--radius); padding: 12px 16px; color: #f08080; font-size: 13px; display: flex; align-items: flex-start; gap: 10px; }
+    .hidden { display: none !important; }
+    .flex { display: flex; } .items-center { align-items: center; } .justify-between { justify-content: space-between; } .gap-2 { gap: 8px; } .w-full { width: 100%; }
+
+    body { max-width: 720px; margin: 0 auto; padding: 40px 24px; }
+    .header { margin-bottom: 40px; border-bottom: 1px solid var(--color-border); padding-bottom: 24px; }
+    .header::after { content: ''; display: block; height: 2px; background: linear-gradient(90deg, var(--color-crimson), var(--color-gold)); margin-top: 24px; }
+    h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.04em; }
+    h1 span { color: var(--color-crimson); }
+    .subtitle { font-size: 14px; color: var(--color-text-muted); margin-top: 8px; }
+    h2 { font-size: 18px; font-weight: 700; margin: 32px 0 12px; color: var(--color-white); }
+    p { color: var(--color-text-muted); line-height: 1.7; margin-bottom: 12px; }
+    .highlight { background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.2); border-radius: var(--radius); padding: 16px 20px; margin: 24px 0; }
+    .highlight h3 { color: #4ddd8a; font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+    .highlight p { color: #9de8c0; margin: 0; }
+    strong { color: var(--color-text); }
+    code { background: var(--color-surface-2); padding: 2px 6px; border-radius: 3px; font-size: 12px; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Salesforce <span>CPQ Toolkit</span></h1>
+    <div class="subtitle">Privacy Policy · Last updated: 2024</div>
+  </div>
+
+  <div class="highlight">
+    <h3>🔒 The Short Version</h3>
+    <p>
+      This extension collects <strong>zero</strong> personal data. It sends <strong>zero</strong> data to external servers.
+      All Salesforce API calls go directly from your browser to your own Salesforce org.
+      We have no servers, no analytics, no tracking, and no revenue model based on your data.
+    </p>
+  </div>
+
+  <h2>What Data Does This Extension Access?</h2>
+  <p>
+    The Salesforce CPQ Toolkit reads Salesforce metadata and object data directly from your own Salesforce org
+    using your existing authenticated browser session. This includes field metadata (for Twin Field Explorer),
+    product records, pricing rules, and CPQ configuration objects (for SKU Quote Explorer).
+  </p>
+  <p>
+    <strong>This data is displayed directly in your browser and never leaves your browser.</strong>
+    The extension does not store, log, transmit, or share any of this data with any third party.
+  </p>
+
+  <h2>External Network Requests</h2>
+  <p>
+    The only network requests made by this extension are:
+  </p>
+  <ul style="color:var(--color-text-muted);line-height:2;padding-left:20px;margin-bottom:12px">
+    <li>To your own Salesforce org's REST API (<code>*.salesforce.com</code>, <code>*.force.com</code>)</li>
+    <li>To Google Fonts CDN to load the <strong>Funnel Sans</strong> typeface for display purposes</li>
+  </ul>
+  <p>No other external network requests are made. There is no telemetry, crash reporting, or analytics of any kind.</p>
+
+  <h2>Authentication & Credentials</h2>
+  <p>
+    This extension uses your browser's existing Salesforce session cookie (the same session your browser tab uses
+    when logged in to Salesforce). <strong>No usernames, passwords, API keys, tokens, or OAuth credentials
+    are ever stored, read, or transmitted by this extension.</strong>
+  </p>
+
+  <h2>Data Storage</h2>
+  <p>
+    The only data stored locally by this extension is the URL of your active Salesforce org (stored in
+    <code>chrome.storage.session</code> for the duration of the browser session only). This is cleared
+    automatically when you close your browser.
+  </p>
+  <p>No personal data, Salesforce records, field metadata, or any other org data is persisted to local storage.</p>
+
+  <h2>Open Source</h2>
+  <p>
+    The full source code for this extension is publicly available on GitHub. You are encouraged to review it,
+    audit it, and report any security concerns. Transparency is core to this project's values.
+  </p>
+
+  <h2>Changes to This Policy</h2>
+  <p>
+    Any changes to this privacy policy will be reflected in the extension's GitHub repository and
+    in the extension store listing.
+  </p>
+
+  <h2>Contact</h2>
+  <p>
+    Questions or concerns? Please open an issue on the GitHub repository.
+  </p>
+
+</body>
+</html>
