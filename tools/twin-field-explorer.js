@@ -21,6 +21,25 @@ let sortCol = "apiName";
 let sortAsc = true;
 let api = null;
 
+const TWIN_PAIRS = [
+  { source: 'Contract',                  target: 'Opportunity' },
+  { source: 'ServiceContract',           target: 'Opportunity' },
+  { source: 'OpportunityLineItem',       target: 'SBQQ__QuoteLine__c' },
+  { source: 'Product2',                  target: 'SBQQ__QuoteLine__c' },
+  { source: 'SBQQ__ProductOption__c',    target: 'SBQQ__QuoteLine__c' },
+  { source: 'SBQQ__Quote__c',            target: 'Order' },
+  { source: 'SBQQ__QuoteLine__c',        target: 'OrderItem' },
+  { source: 'SBQQ__QuoteLine__c',        target: 'OpportunityLineItem' },
+  { source: 'SBQQ__QuoteLine__c',        target: 'SBQQ__Subscription__c' },
+  { source: 'SBQQ__QuoteLine__c',        target: 'Asset' },
+  { source: 'SBQQ__QuoteLine__c',        target: 'ContractLineItem' },
+  { source: 'SBQQ__Subscription__c',     target: 'SBQQ__QuoteLine__c' },
+  { source: 'ContractLineItem',          target: 'SBQQ__QuoteLine__c' },
+  { source: 'OrderItem',                 target: 'blng__InvoiceLine__c' },
+  { source: 'Asset',                     target: 'SBQQ__QuoteLine__c' },
+  { source: 'SBQQ__ConfigurationAttribute__c', target: 'SBQQ__QuoteLine__c' }
+];
+
 // ── Init ───────────────────────────────────────────────────────────────────
 function init() {
   api = getAPIFromUrl();
@@ -72,16 +91,31 @@ async function runScan() {
   document.getElementById("exportBtn").disabled = true;
 
   try {
-    setLoadingMsg("Fetching Quote Line (SBQQ__QuoteLine__c) field metadata…");
-    const qlDescribe = await api.describe("SBQQ__QuoteLine__c");
+    allPairs = [];
 
-    setLoadingMsg("Fetching Opportunity Line Item field metadata…");
-    const oliDescribe = await api.describe("OpportunityLineItem");
+    for (const pair of TWIN_PAIRS) {
+      try {
+        setLoadingMsg(`Fetching ${pair.source} fields…`);
+        const sourceDescribe = await api.describe(pair.source);
 
-    setLoadingMsg("Computing twin field pairs…");
-    allPairs = computeTwinPairs(qlDescribe.fields, oliDescribe.fields);
+        setLoadingMsg(`Fetching ${pair.target} fields…`);
+        const targetDescribe = await api.describe(pair.target);
 
-    renderStats(qlDescribe.fields, oliDescribe.fields, allPairs);
+        setLoadingMsg(`Computing twins for ${pair.source} → ${pair.target}…`);
+        const twins = computeTwinPairs(
+          sourceDescribe.fields,
+          targetDescribe.fields,
+          pair.source,
+          pair.target
+        );
+        allPairs.push(...twins);
+      } catch (e) {
+        console.warn(`Skipping pair ${pair.source} → ${pair.target}: ${e.message}`);
+        continue;
+      }
+    }
+
+    renderStats(allPairs);
     applyFilters();
     showState("results");
     document.getElementById("exportBtn").disabled = false;
@@ -99,45 +133,45 @@ async function runScan() {
  * We also include fields that ONLY exist on one side with a flag,
  * so users can see near-matches or candidates.
  */
-function computeTwinPairs(qlFields, oliFields) {
-  // Build lookup maps
-  const qlMap = new Map(qlFields.map((f) => [f.name.toLowerCase(), f]));
-  const oliMap = new Map(oliFields.map((f) => [f.name.toLowerCase(), f]));
+function computeTwinPairs(sourceFields, targetFields, sourceObj, targetObj) {
+  const sourceMap = new Map(sourceFields.map(f => [f.name.toLowerCase(), f]));
+  const targetMap = new Map(targetFields.map(f => [f.name.toLowerCase(), f]));
 
   const pairs = [];
 
-  // Find all fields that exist on BOTH objects (true twin fields)
-  for (const [key, qlField] of qlMap.entries()) {
-    if (oliMap.has(key)) {
-      const oliField = oliMap.get(key);
-      const typesMatch = qlField.type === oliField.type;
+  for (const [key, sourceField] of sourceMap.entries()) {
+    if (targetMap.has(key)) {
+      const targetField = targetMap.get(key);
+      const typesMatch = sourceField.type === targetField.type;
+
       pairs.push({
-        apiName: qlField.name,
-        // Quote Line side
-        qlLabel: qlField.label,
-        qlType: qlField.type,
-        qlLength: qlField.length,
-        qlPrecision: qlField.precision,
-        qlScale: qlField.scale,
-        qlRequired: !qlField.nillable && !qlField.defaultedOnCreate,
-        qlFormula: qlField.calculated,
-        // OLI side
-        oliLabel: oliField.label,
-        oliType: oliField.type,
-        oliLength: oliField.length,
-        oliPrecision: oliField.precision,
-        oliScale: oliField.scale,
-        oliRequired: !oliField.nillable && !oliField.defaultedOnCreate,
-        oliFormula: oliField.calculated,
-        // Analysis
+        apiName: sourceField.name,
+        sourceObj,
+        targetObj,
+        pairLabel: `${sourceObj} → ${targetObj}`,
+        // source side
+        sourceLabel: sourceField.label,
+        sourceType: sourceField.type,
+        sourceLength: sourceField.length,
+        sourcePrecision: sourceField.precision,
+        sourceScale: sourceField.scale,
+        sourceRequired: !sourceField.nillable && !sourceField.defaultedOnCreate,
+        sourceFormula: sourceField.calculated,
+        // target side
+        targetLabel: targetField.label,
+        targetType: targetField.type,
+        targetLength: targetField.length,
+        targetPrecision: targetField.precision,
+        targetScale: targetField.scale,
+        targetRequired: !targetField.nillable && !targetField.defaultedOnCreate,
+        targetFormula: targetField.calculated,
         typesMatch,
-        isCustom: qlField.custom || oliField.custom,
-        isTwin: true,
+        isCustom: sourceField.custom || targetField.custom,
+        isTwin: true
       });
     }
   }
 
-  // Sort by API name by default
   pairs.sort((a, b) => a.apiName.localeCompare(b.apiName));
   return pairs;
 }
@@ -154,7 +188,7 @@ function applyFilters() {
 
     // Search
     if (search) {
-      const hay = `${p.apiName} ${p.qlLabel} ${p.oliLabel}`.toLowerCase();
+        const hay = `${p.apiName} ${p.sourceLabel} ${p.targetLabel} ${p.pairLabel} ${p.sourceObj} ${p.targetObj}`.toLowerCase();
       if (!hay.includes(search)) return false;
     }
 
@@ -199,37 +233,26 @@ function renderTable() {
       ? `<span class="badge badge-gold">Custom</span>`
       : `<span class="badge badge-muted">Standard</span>`;
 
-    mainRow.innerHTML = `
-      <td><span class="expand-icon" id="ei-${idx}">›</span></td>
-      <td><code style="color:var(--color-crimson-light);font-size:12px">${escHtml(pair.apiName)}</code></td>
-      <td>${escHtml(pair.qlLabel)}</td>
-      <td><span class="badge badge-muted">${formatFieldType(pair.qlType, pair.qlLength, pair.qlPrecision, pair.qlScale)}</span></td>
-      <td>${escHtml(pair.oliLabel)}</td>
-      <td><span class="badge badge-muted">${formatFieldType(pair.oliType, pair.oliLength, pair.oliPrecision, pair.oliScale)}</span></td>
-      <td>${typeBadge}</td>
-      <td>${customBadge}</td>
-    `;
+      mainRow.innerHTML = `
+        <td>${escHtml(pair.pairLabel)}</td>
+        <td>${escHtml(pair.sourceLabel)}</td>
+        <td>${escHtml(pair.targetLabel)}</td>
+        <td>${typeBadge}</td>
+        <td>${customBadge}</td>
+      `;
 
     // Detail row (hidden by default)
     const detailRow = document.createElement("tr");
     detailRow.id = `detail-${idx}`;
     detailRow.style.display = "none";
     detailRow.innerHTML = `
-      <td colspan="8" style="padding:0;background:var(--color-surface-2)">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--color-border)">
-          <div style="background:var(--color-surface-2);padding:16px">
-            <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--color-crimson);margin-bottom:10px">Quote Line (SBQQ__QuoteLine__c)</div>
-            ${renderFieldDetail(pair, "ql")}
-          </div>
-          <div style="background:var(--color-surface-2);padding:16px">
-            <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--color-gold);margin-bottom:10px">Opportunity Line Item</div>
-            ${renderFieldDetail(pair, "oli")}
-          </div>
-        </div>
-        ${!pair.typesMatch ? `<div class="error-banner" style="margin:12px;border-radius:var(--radius-sm)">
-          <span>⚠</span>
-          <span><strong>Type Mismatch:</strong> The Quote Line field type (${formatFieldType(pair.qlType)}) does not match the OLI field type (${formatFieldType(pair.oliType)}). CPQ may not sync this twin field correctly. Review and align the field types.</span>
-        </div>` : ""}
+      <td colspan="5">
+        <strong>${escHtml(pair.sourceObj)}</strong><br/>
+        ${renderFieldDetail(pair, "source")}
+
+        <strong>${escHtml(pair.targetObj)}</strong><br/>
+        ${renderFieldDetail(pair, "target")}
+        ${!pair.typesMatch ? '<p class="warning">Type mismatch — value may not sync correctly.</p>' : ''}
       </td>
     `;
 
@@ -241,21 +264,15 @@ function renderTable() {
 }
 
 function renderFieldDetail(pair, side) {
-  const label = pair[`${side}Label`];
-  const type = pair[`${side}Type`];
-  const length = pair[`${side}Length`];
-  const precision = pair[`${side}Precision`];
-  const scale = pair[`${side}Scale`];
-  const required = pair[`${side}Required`];
-  const formula = pair[`${side}Formula`];
-
+  const prefix = side === 'source' ? 'source' : 'target';
   return `
-    <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 16px;font-size:12px">
-      <span style="color:var(--color-text-muted)">Label</span><span>${escHtml(label)}</span>
-      <span style="color:var(--color-text-muted)">API Name</span><code style="color:var(--color-crimson-light)">${escHtml(pair.apiName)}</code>
-      <span style="color:var(--color-text-muted)">Type</span><span><span class="badge badge-muted">${formatFieldType(type, length, precision, scale)}</span></span>
-      <span style="color:var(--color-text-muted)">Required</span><span>${required ? '<span class="badge badge-crimson">Required</span>' : '<span class="badge badge-muted">Optional</span>'}</span>
-      <span style="color:var(--color-text-muted)">Formula</span><span>${formula ? '<span class="badge badge-gold">Formula Field</span>' : '<span class="badge badge-muted">No</span>'}</span>
+    <div class="field-detail">
+      <div><strong>Label:</strong> ${escHtml(pair[`${prefix}Label`])}</div>
+      <div><strong>Type:</strong> ${escHtml(pair[`${prefix}Type`])}</div>
+      <div><strong>Length:</strong> ${pair[`${prefix}Length`] || '-'}</div>
+      <div><strong>Precision/Scale:</strong> ${pair[`${prefix}Precision`] || '-'} / ${pair[`${prefix}Scale`] || '-'}</div>
+      <div><strong>Required:</strong> ${pair[`${prefix}Required`] ? 'Yes' : 'No'}</div>
+      <div><strong>Formula:</strong> ${pair[`${prefix}Formula`] ? 'Yes' : 'No'}</div>
     </div>
   `;
 }
@@ -269,63 +286,39 @@ function toggleDetail(idx) {
 }
 
 // ── Stats ──────────────────────────────────────────────────────────────────
-function renderStats(qlFields, oliFields, pairs) {
-  const twinCount = pairs.length;
-  const mismatchCount = pairs.filter((p) => !p.typesMatch).length;
-  const customCount = pairs.filter((p) => p.isCustom).length;
-
-  document.getElementById("statsBar").innerHTML = `
-    <div class="stat-card">
-      <div class="stat-value white">${twinCount}</div>
-      <div class="stat-label">Total Twin Field Pairs</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value gold">${customCount}</div>
-      <div class="stat-label">Custom Field Pairs</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value crimson">${mismatchCount}</div>
-      <div class="stat-label">Type Mismatches</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value" style="color:var(--color-text-muted)">${qlFields.length}</div>
-      <div class="stat-label">Quote Line Total Fields</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value" style="color:var(--color-text-muted)">${oliFields.length}</div>
-      <div class="stat-label">OLI Total Fields</div>
-    </div>
-  `;
+function renderStats(allPairs) {
+  const uniquePairs = new Set(allPairs.map(p => p.pairLabel)).size;
+    document.getElementById('statsBar').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-value">${allPairs.length}</div>
+        <div class="stat-label">Twin Fields Found</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${uniquePairs}</div>
+        <div class="stat-label">Object Pairs</div>
+      </div>
+    `;
 }
 
 // ── Export CSV ─────────────────────────────────────────────────────────────
 function exportCSV() {
   const headers = [
-    "API Name",
-    "Quote Line Label",
-    "Quote Line Type",
-    "Quote Line Required",
-    "Quote Line Formula",
-    "OLI Label",
-    "OLI Type",
-    "OLI Required",
-    "OLI Formula",
-    "Types Match",
-    "Is Custom",
+    'Pair', 'API Name',
+    'Source Object', 'Source Label', 'Source Type',
+    'Target Object', 'Target Label', 'Target Type',
+    'Types Match', 'Custom'
   ];
-
-  const rows = filteredPairs.map((p) => [
+  const rows = allPairs.map(p => [
+    p.pairLabel,
     p.apiName,
-    p.qlLabel,
-    formatFieldType(p.qlType, p.qlLength, p.qlPrecision, p.qlScale),
-    p.qlRequired,
-    p.qlFormula,
-    p.oliLabel,
-    formatFieldType(p.oliType, p.oliLength, p.oliPrecision, p.oliScale),
-    p.oliRequired,
-    p.oliFormula,
-    p.typesMatch,
-    p.isCustom,
+    p.sourceObj,
+    p.sourceLabel,
+    p.sourceType,
+    p.targetObj,
+    p.targetLabel,
+    p.targetType,
+    p.typesMatch ? 'Yes' : 'No',
+    p.isCustom ? 'Yes' : 'No'
   ]);
 
   const csv = [headers, ...rows]

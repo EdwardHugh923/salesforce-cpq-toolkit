@@ -477,18 +477,15 @@
         </div>
         <div class="table-wrap" id="tableContainer">
           <table id="resultsTable">
-            <thead>
-              <tr>
-                <th style="width:24px"></th>
-                <th data-col="apiName">API Field Name</th>
-                <th data-col="label">Quote Line Label</th>
-                <th data-col="qlType">Quote Line Type</th>
-                <th data-col="oliLabel">OLI Label</th>
-                <th data-col="oliType">OLI Type</th>
-                <th data-col="typesMatch">Types Match</th>
-                <th data-col="isCustom">Custom</th>
-              </tr>
-            </thead>
+              <thead>
+                <tr>
+                  <th data-col="pairLabel" class="sortable">Object Pair</th>
+                  <th data-col="sourceLabel" class="sortable">Source Label</th>
+                  <th data-col="targetLabel" class="sortable">Target Label</th>
+                  <th data-col="typesMatch" class="sortable">Type Match</th>
+                  <th data-col="isCustom" class="sortable">Custom</th>
+                </tr>
+              </thead>
             <tbody id="resultsBody"></tbody>
           </table>
         </div>
